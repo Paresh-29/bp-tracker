@@ -1,5 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "../ui/button";
+import { Trash2 } from "lucide-react";
 
 interface Reading {
   id: string;
@@ -11,9 +15,41 @@ interface Reading {
 
 interface ReadingCardProps {
   reading: Reading;
+  onDelete?: (id: string) => void;
 }
 
-export function ReadingCard({ reading }: ReadingCardProps) {
+export function ReadingCard({ reading, onDelete }: ReadingCardProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this reading? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const res = await fetch(`/api/readings/${reading.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete reading");
+      }
+
+      toast.success("Reading deleted successfully");
+      onDelete?.(reading.id);
+    } catch (error) {
+      toast.error("Failed to delete reading. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -55,9 +91,26 @@ export function ReadingCard({ reading }: ReadingCardProps) {
               Pulse: <span className="font-medium">{reading.pulse} bpm</span>
             </div>
           </div>
-          <Badge variant="outline" className="text-xs">
-            {formatDate(reading.recordedAt)}
-          </Badge>
+          <div className="flex flex-col items-end gap-2">
+            <Badge variant="outline" className="text-xs">
+              {formatDate(reading.recordedAt)}
+            </Badge>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="h-8 w-8 p-0"
+            >
+              {isDeleting ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+
+              <span className="sr-only">Delete Reading</span>
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -10,7 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
-export function ReadingForm() {
+interface ReadingFormProps {
+  onReadingAdded?: () => void;
+}
+
+export function ReadingForm({ onReadingAdded }: ReadingFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     systolic: "",
@@ -44,7 +48,10 @@ export function ReadingForm() {
       setFormData({ systolic: "", diastolic: "", pulse: "" });
 
       // Refresh the page to show new reading
-      router.refresh();
+      // router.refresh();
+
+      // call the callback to refresh the readings list
+      onReadingAdded?.();
 
       toast.success("Reading added successfully!");
     } catch (error) {
